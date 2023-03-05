@@ -29,15 +29,15 @@ LFLAGS=-lGLEW -lglfw -lGL -lfreetype
 
 CXXFLAGS= $(LFLAGS) $(INCLUDE) -O2
 
-example: $(OBJ)
-	g++ $(OBJ) -o example $(CXXFLAGS)
+rend: $(OBJ)
+	g++ $(OBJ) -o rend $(CXXFLAGS)
 
 
 init:
 	mkdir -p src obj obj/dep $(foreach dir,$(SourcePaths),obj/$(dir))  $(foreach dir,$(SourcePaths),obj/dep/$(dir))
 
 clean:
-	rm -f ./example ./obj/*.o ./obj/dep/*.d $(foreach dir,$(SourcePaths),obj/$(dir)/*.o) $(foreach dir,$(SourcePaths),obj/dep/$(dir)/*.d)
+	rm -f ./rend /obj/*.o ./obj/dep/*.d $(foreach dir,$(SourcePaths),obj/$(dir)/*.o) $(foreach dir,$(SourcePaths),obj/dep/$(dir)/*.d)
 
 ./obj/dep/%.d: %.cpp
 	@rm -f $@

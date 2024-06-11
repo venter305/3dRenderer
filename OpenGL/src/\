@@ -1,0 +1,145 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include "GraphicsEngine/graphicsEngine.h"
+
+class MainWindow : public Window {
+	public:
+		GLuint shaderId;
+		GLuint VAO;
+
+		std::vector<GLfloat> vertices;
+		std::vector<GLuint> indices;
+
+
+		GLfloat color[3] = {1.0f,0.0f,0.0f};
+
+		MainWindow(int w, int h, std::string name):Window(w,h,name){
+		}
+
+		void OnStartup() override {
+			glClearColor(0.01f,0.0f,0.05f,1.0f);
+
+			std::string modelName = "";
+
+					std::ifstream modelFile;
+			modelFile.open("./Models/teapot.obj");
+			while (!modelFile.eof()){
+				std::string type;
+				modelFile >> type;
+				if (!type.compare("o"))
+					modelFile >> modelName;
+				else if (!type.compare("v")){
+					GLfloat vx,vy,vz;
+					vertices.push_back(vx);
+					vertices.push_back(vy);
+					vertices.push_back(vz);
+				}
+				else if (!type.compare("f")){
+					GLuint f1,f2,f3;
+					indices.push_back(f1);	
+					indices.push_back(f2);	
+					indices.push_back(f3);
+				}
+			}
+			modelFile.close();
+
+			glBindVertexArray(VAO);
+
+			unsigned int VBO,IBO;
+			glGenBuffers(1,&VBO);
+			glGenBuffers(1,&IBO);
+			
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(GLfloat), &vertices[0],GL_STATIC_DRAW);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size()*sizeof(GLuint), &indices[0],GL_STATIC_DRAW);
+
+			glVertexAttribPointer(0,3,GL_FLOAT,false,3*sizeof(GLfloat),(void*)0);
+			glEnableVertexAttribArray(0);
+
+			unsigned int vertex, fragment;
+			int success;
+			char infoLog[512];
+
+			vertex = glCreateShader(GL_VERTEX_SHADER);
+
+			std::ifstream vsFile;
+			vsFile.open("./src/Shaders/vertexShader");
+			std::stringstream vsStream;
+			vsStream << vsFile.rdbuf();
+			vsFile.close();
+			std::string vsString = vsStream.str();
+			const char *vCode = vsString.c_str();
+
+			glShaderSource(vertex,1,&vCode,NULL);
+			glCompileShader(vertex);
+			glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+			if (!success){
+				glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+				std::cout << "Vertex Shader Compilation Failed: " << infoLog << std::endl;
+			}
+
+			fragment = glCreateShader(GL_FRAGMENT_SHADER);
+			std::ifstream fsFile;
+			fsFile.open("./src/Shaders/fragmentShader");
+			std::stringstream fsStream;
+			fsStream << fsFile.rdbuf();
+			fsFile.close();
+			std::string fsString = fsStream.str();
+			const char *fCode = fsString.c_str();
+
+			glShaderSource(fragment,1,&fCode,NULL);
+			glCompileShader(fragment);
+			glGetShaderiv(fragment,GL_COMPILE_STATUS, &success);
+			if (!success){
+				glGetShaderInfoLog(fragment, 512, NULL, infoLog);
+				std::cout << "Fragment Shader Compilation Failed: " << infoLog << std::endl;
+			}
+
+			shaderId = glCreateProgram();
+			glAttachShader(shaderId,vertex);
+			glAttachShader(shaderId,fragment);
+			glLinkProgram(shaderId);
+
+			glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+			if (!success){
+				glGetProgramInfoLog(shaderId, 512, NULL, infoLog);
+				std::cout << "Shader Linking Error: " << infoLog << std::endl;
+			}
+
+			glDeleteShader(vertex);
+			glDeleteShader(fragment);
+
+			
+			
+			
+		}
+		
+		void OnUpdate(double dTime) override {
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glUseProgram(shaderId);
+			glBindVertexArray(VAO);
+			glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+		}
+		
+		void OnShutdown() override {
+		}
+
+		void OnEvent(Event &ev) override {
+		}
+		
+};
+
+int main() {
+	GraphicsEngine::Init();
+
+	GraphicsEngine::AddWindow(new MainWindow(640,480,"3d Renderer"));
+	GraphicsEngine::Run();
+
+	return 0;
+}

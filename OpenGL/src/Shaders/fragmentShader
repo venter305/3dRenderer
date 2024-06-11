@@ -1,0 +1,15 @@
+#version 450 core
+
+out vec4 FragColor;
+
+in vec3 color;
+in vec3 normal;
+
+void main(){
+	vec3 ambient = vec3(0.1f,0.1f,0.1f);
+	vec3 lightDir = vec3(0.0f,0.0f,-1.0f);
+	vec3 diffuse = vec3(max(dot(normal,lightDir),0.0f));
+
+	vec3 result = (ambient + diffuse) * vec3(1.0f);
+	FragColor = vec4(result,1.0f);
+}
